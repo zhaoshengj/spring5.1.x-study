@@ -1,4 +1,4 @@
-# <img src="src/docs/asciidoc/images/spring-framework.png" width="80" height="80"> Spring Framework 5.1.x(学习)
+# <img src="https://spring.io/img/homepage/icon-spring-framework.svg" width="80" height="80"> Spring Framework 5.1.x(学习)
 
 ## 本项目只是为了阅读分析源码
 * [spring-framework- 源代码地址](https://github.com/spring-projects/spring-framework)
