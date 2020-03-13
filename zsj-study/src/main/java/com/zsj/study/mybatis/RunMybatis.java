@@ -13,7 +13,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import java.util.List;
 import java.util.Map;
 
-public class RunMabatis {
+public class RunMybatis {
 
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext applicationContext =

@@ -514,21 +514,37 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 	@Override
 	public void refresh() throws BeansException, IllegalStateException {
+		//使用互斥锁 ，防止启动，关闭及注册回调函数的重复调用 保证上下文的对象状态
 		synchronized (this.startupShutdownMonitor) {
 			// Prepare this context for refreshing.
 			/**
-			 * 配置刷新
+			 * 配置刷新  提前准备好启动参数
 			 */
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
+			/**
+			 *  调用创建子类的创建工厂方法和刷新工厂方法
+			 *
+			 *  beanFactory.xml 配置文件的读取也是在此时加载
+			 */
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
+			/**
+			 * 初始化和设置BeanFactory的初始参数
+			 */
 			prepareBeanFactory(beanFactory);
 
 			try {
 				// Allows post-processing of the bean factory in context subclasses.
+
+				/**
+				 * 调用BeanFactory 实例化后置处理器
+				 *
+				 * SpringBoot的核心上下文实现类 AnnotaionCofigEmbeddedWebApplicationContext
+				 * 通过重写 postProcessBeanFactory 方法来实现 SpringBoot 对Bean配置对加载
+				 */
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
@@ -538,18 +554,22 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
+				// 在Bean工厂中注册Bean的后置处理器（BeanPostProcessor） bean的代理的生成有它实现
 				registerBeanPostProcessors(beanFactory);
 
 				// Initialize message source for this context.
+				//初始化消息来源 设置父消息源来自于父容器的配置
 				initMessageSource();
 
 				// Initialize event multicaster for this context.
+				//
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.
 				onRefresh();
 
 				// Check for listener beans and register them.
+				//注册listener
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
@@ -557,10 +577,13 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				 * spring 开始实例化单例的类
 				 *
 				 * 需要validate 和 life
+				 *
+				 * 把所有非延时加载的Bean初始化并设置冻结标志位 防止重新实例化Bean浪费资源
 				 */
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
+				//注册，启动LifecycleProcessor，发送启动完成事件
 				finishRefresh();
 			}
 
@@ -571,9 +594,11 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				}
 
 				// Destroy already created singletons to avoid dangling resources.
+				//销毁已创建的单例以避免资源悬空
 				destroyBeans();
 
 				// Reset 'active' flag.
+				//释放标志位，标识其可以重新启动
 				cancelRefresh(ex);
 
 				// Propagate exception to caller.
@@ -583,6 +608,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			finally {
 				// Reset common introspection caches in Spring's core, since we
 				// might not ever need metadata for singleton beans anymore...
+
+				//清除与反射相关的缓存
 				resetCommonCaches();
 			}
 		}

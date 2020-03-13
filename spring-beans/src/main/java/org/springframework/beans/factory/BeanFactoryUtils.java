@@ -57,6 +57,7 @@ public abstract class BeanFactoryUtils {
 	 * @since 5.1
 	 * @see BeanFactory#FACTORY_BEAN_PREFIX
 	 */
+	//从具有工厂Bean前缀的名称缓存到剥离的名称，而无需取消引用。
 	private static final Map<String, String> transformedBeanNameCache = new ConcurrentHashMap<>();
 
 

@@ -140,7 +140,7 @@ public class ProxyFactory extends ProxyCreatorSupport {
 	}
 
 	/**
-	 * Create a proxy for the specified {@code TargetSource} that extends
+	 * Create a proxy for the specified {@code tiiaTargetSource} that extends
 	 * the target class of the {@code TargetSource}.
 	 * @param targetSource the TargetSource that the proxy should invoke
 	 * @return the proxy object
