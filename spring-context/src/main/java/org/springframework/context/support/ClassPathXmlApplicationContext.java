@@ -144,7 +144,11 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 		 * 依赖父类 ApplicationContext
 		 */
 		super(parent);
+
+		// 根据提供的路径，处理成配置文件数组(以分号、逗号、空格、tab、换行符分割)
 		setConfigLocations(configLocations);
+
+		// 核心方法
 		if (refresh) {
 			refresh();
 		}
