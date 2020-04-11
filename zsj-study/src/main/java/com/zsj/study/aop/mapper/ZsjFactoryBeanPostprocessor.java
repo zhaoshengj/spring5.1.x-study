@@ -14,7 +14,7 @@ public class ZsjFactoryBeanPostprocessor implements BeanFactoryPostProcessor {
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
 
 		GenericBeanDefinition indexService = (GenericBeanDefinition) beanFactory.getBeanDefinition("login");
-		indexService.setBeanClass(UserService.class);
+		//indexService.setBeanClass(UserService.class);
 
 	}
 }

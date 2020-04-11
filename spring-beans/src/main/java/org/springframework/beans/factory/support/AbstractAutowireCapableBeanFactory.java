@@ -426,6 +426,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		Object result = existingBean;
 		for (BeanPostProcessor processor : getBeanPostProcessors()) {
+
+			//AbstractAutoProxyCreator 处理后置处理器 处理动态代理的数据
 			Object current = processor.postProcessAfterInitialization(result, beanName);
 			if (current == null) {
 				return result;
@@ -512,6 +514,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			 *
 			 * 获取并且调用Bean的后置处理器的子接口，因为当前的createBean方法也是一个模版方法，并且为了扩展性和灵活性
 			 * 增加了几个bean实例化前的处理器接口
+			 *
+			 * 通过后置处理器生成代理对象，此处不会生成代理对象
+			 * 这一步是代理，事务的关键，此处解析AOP切面信息，进行缓存
+			 *
+			 *
 			 */
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 
@@ -579,7 +586,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		if (instanceWrapper == null) {
 
 			// 说明不是 FactoryBean，这里实例化 Bean
-			//创建bean实例
+			//创建bean实例  选择合适构造函数
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
 		// 这个就是 Bean 里面的 我们定义的类 的实例，很多地方我直接描述成 "bean 实例"
@@ -639,8 +646,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			 */
 			populateBean(beanName, mbd, instanceWrapper);
 			/**
-			 * 初始化spring    AOP就是在这里完成处理
+			 * 初始化spring
 			 *
+			 * AOP就是在这里完成处理
 			 * 七八次的后置处理器的调用
 			 */
 			// 还记得 init-method 吗？还有 InitializingBean 接口？还有 BeanPostProcessor 接口？
@@ -1154,7 +1162,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			// Make sure bean class is actually resolved at this point.
 			//（2）Bean是原生的Bean
 			//（3）Bean的 hasInstantiationAwareBeanPostProcessors属性为true，
-			// 这个属性在Spring准备刷新容器钱转杯BeanPostProcessors的时候会设置，
+			// 这个属性在Spring准备刷新容器 BeanPostProcessors的时候会设置，
 			// 如果当前Bean实现了 InstantiationAwareBeanPostProcessor则这个就会是true。
 			if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
 				Class<?> targetType = determineTargetType(beanName, mbd);
@@ -1880,7 +1888,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		if (mbd == null || !mbd.isSynthetic()) {
 			/**
-			 * 第八次执行后置处理器
+			 * 第八次执行后置处理器   AOP
 			 *
 			 * 执行后置处理器的after 方法
 			 *

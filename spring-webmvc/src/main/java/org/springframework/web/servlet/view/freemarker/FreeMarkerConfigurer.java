@@ -45,6 +45,7 @@ import org.springframework.web.context.ServletContextAware;
  *   &lt;property name="templateLoaderPath"&gt;&lt;value&gt;/WEB-INF/freemarker/&lt;/value>&lt;/property&gt;
  * &lt;/bean&gt;</pre>
  *
+ *
  * This bean must be included in the application context of any application
  * using Spring's FreeMarkerView for web MVC. It exists purely to configure FreeMarker.
  * It is not meant to be referenced by application components but just internally

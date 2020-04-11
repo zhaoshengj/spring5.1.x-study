@@ -500,14 +500,28 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * <p>May be overridden in subclasses in order to initialize further strategy objects.
 	 */
 	protected void initStrategies(ApplicationContext context) {
+
+		//初始化
+		// 初始化 MultipartResolver
+
+
 		initMultipartResolver(context);
+		// 初始化 LocaleResolver
 		initLocaleResolver(context);
 		initThemeResolver(context);
+		// 初始化 HandlerMappings
 		initHandlerMappings(context);
+		// 初始化 HandlerAdapters
 		initHandlerAdapters(context);
+		// 初始化 HandlerExceptionResolvers
 		initHandlerExceptionResolvers(context);
+
+		// 初始化 RequestToViewNameTranslator
 		initRequestToViewNameTranslator(context);
+		// 初始化 ViewResolvers
 		initViewResolvers(context);
+
+		// 初始化 FlashMapManager
 		initFlashMapManager(context);
 	}
 
@@ -515,6 +529,8 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * Initialize the MultipartResolver used by this class.
 	 * <p>If no bean is defined with the given name in the BeanFactory for this namespace,
 	 * no multipart handling is provided.
+	 *
+	 * 文件上传请求
 	 */
 	private void initMultipartResolver(ApplicationContext context) {
 		try {
@@ -593,8 +609,15 @@ public class DispatcherServlet extends FrameworkServlet {
 	private void initHandlerMappings(ApplicationContext context) {
 		this.handlerMappings = null;
 
+		//detectAllHandlerMappings默认是true，是否查找所有的HandlerMapping
 		if (this.detectAllHandlerMappings) {
+
 			// Find all HandlerMappings in the ApplicationContext, including ancestor contexts.
+			//从spring容器拿出所有类型为HandlerMapping的bean，但是一般情况都是返回null
+			//因为spring没有把RequestMappingHandlerMapping和BeanNameUrlHandlerMapping放到spring容器，
+			//除非我们自己实现HandlerMapping写一个扩展类并@Component放入spring容器
+			//但是这种扩展方式有问题吧？这样一来handlerMappings就不是null了，
+			//找RequestMappingHandlerMapping和BeanNameUrlHandlerMapping的逻辑也就不会执行了
 			Map<String, HandlerMapping> matchingBeans =
 					BeanFactoryUtils.beansOfTypeIncludingAncestors(context, HandlerMapping.class, true, false);
 			if (!matchingBeans.isEmpty()) {
@@ -605,6 +628,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		}
 		else {
 			try {
+				//只查找beanName为handlerMapping的HandlerMapping
 				HandlerMapping hm = context.getBean(HANDLER_MAPPING_BEAN_NAME, HandlerMapping.class);
 				this.handlerMappings = Collections.singletonList(hm);
 			}
@@ -616,6 +640,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		// Ensure we have at least one HandlerMapping, by registering
 		// a default HandlerMapping if no other mappings are found.
 		if (this.handlerMappings == null) {
+			//找到RequestMappingHandlerMapping和BeanNameUrlHandlerMapping
 			this.handlerMappings = getDefaultStrategies(context, HandlerMapping.class);
 			if (logger.isTraceEnabled()) {
 				logger.trace("No HandlerMappings declared for servlet '" + getServletName() +
@@ -859,6 +884,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	@SuppressWarnings("unchecked")
 	protected <T> List<T> getDefaultStrategies(ApplicationContext context, Class<T> strategyInterface) {
 		String key = strategyInterface.getName();
+		//defaultStrategies是一个Properties文件，在DsipatcherServlet的静态块里初始化
 		String value = defaultStrategies.getProperty(key);
 		if (value != null) {
 			String[] classNames = StringUtils.commaDelimitedListToStringArray(value);
@@ -908,6 +934,8 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	@Override
 	protected void doService(HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+		// <1> 打印请求日志，并且日志级别为 DEBUG
 		logRequest(request);
 
 		// Keep a snapshot of the request attributes in case of an include,
@@ -925,6 +953,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		}
 
 		// Make framework objects available to handlers and view objects.
+		// <3> 设置 Spring 框架中的常用对象到 request 属性中
 		request.setAttribute(WEB_APPLICATION_CONTEXT_ATTRIBUTE, getWebApplicationContext());
 		request.setAttribute(LOCALE_RESOLVER_ATTRIBUTE, this.localeResolver);
 		request.setAttribute(THEME_RESOLVER_ATTRIBUTE, this.themeResolver);
@@ -940,6 +969,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		}
 
 		try {
+			//核心方法
 			doDispatch(request, response);
 		}
 		finally {
@@ -999,6 +1029,9 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		HttpServletRequest processedRequest = request;
+
+		//拿到对应的处理器
+		//大致可以这样理解，比如访问/hello，mappedHandler就是HelloController类和hello方法封装的一个对象
 		HandlerExecutionChain mappedHandler = null;
 		boolean multipartRequestParsed = false;
 
@@ -1013,13 +1046,21 @@ public class DispatcherServlet extends FrameworkServlet {
 				multipartRequestParsed = (processedRequest != request);
 
 				// Determine handler for the current request.
+				//获得请求对应的 HandlerExecutionChain 对象
 				mappedHandler = getHandler(processedRequest);
 				if (mappedHandler == null) {
+					//如果获取不到，则根据配置抛出异常或返回 404 错误
 					noHandlerFound(processedRequest, response);
 					return;
 				}
 
 				// Determine handler adapter for the current request.
+				//拿到处理器对应的处理器适配器，为什么要拿适配器，直接处理不好吗？
+				//我们知道有三种类型的controller，不同的controller处理方式都不同，按照我们常规写法就是
+				//if(@Controller的controller){处理逻辑，反射调用hello方法}
+				//else if(实现Controller接口的controller){处理逻辑，回调接口的handleRequest方法}
+				//这种写法很明显的弊端就是违反了开闭原则，当我们要处理第四种controller的时候必须新增一个elseif
+				//mvc采取适配器模式解决了这种问题，
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
 				// Process last-modified header, if supported by the handler.
@@ -1032,11 +1073,13 @@ public class DispatcherServlet extends FrameworkServlet {
 					}
 				}
 
+				// <5> 前置处理 拦截器
 				if (!mappedHandler.applyPreHandle(processedRequest, response)) {
 					return;
 				}
 
 				// Actually invoke the handler.
+				//真正的去调用hello方法或handleRequest方法，不同的适配器处理不同的controller
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
 				if (asyncManager.isConcurrentHandlingStarted()) {
@@ -1044,6 +1087,8 @@ public class DispatcherServlet extends FrameworkServlet {
 				}
 
 				applyDefaultViewName(processedRequest, mv);
+
+				// <9> 后置处理 拦截器
 				mappedHandler.applyPostHandle(processedRequest, response, mv);
 			}
 			catch (Exception ex) {
@@ -1054,6 +1099,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				// making them available for @ExceptionHandler methods and other scenarios.
 				dispatchException = new NestedServletException("Handler dispatch failed", err);
 			}
+			// <11> 处理正常和异常的请求调用结果。
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
 		}
 		catch (Exception ex) {
@@ -1230,6 +1276,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
 		if (this.handlerMappings != null) {
 			for (HandlerMapping mapping : this.handlerMappings) {
+				//遍历所有的handlerMapping，找到具体的controller(HelloController的hello||handlerRequest方法)
 				HandlerExecutionChain handler = mapping.getHandler(request);
 				if (handler != null) {
 					return handler;

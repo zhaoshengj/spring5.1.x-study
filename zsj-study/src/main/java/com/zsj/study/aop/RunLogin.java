@@ -1,6 +1,7 @@
 package com.zsj.study.aop;
 
 
+import com.sun.tracing.dtrace.ArgsAttributes;
 import com.zsj.study.aop.config.AppConfig;
 import com.zsj.study.aop.service.LoginService;
 import com.zsj.study.aop.service.UserService;
@@ -16,11 +17,14 @@ import java.util.concurrent.locks.ReentrantLock;
 public class RunLogin {
 
 	public static void main(String[] args) {
-		ClassPathXmlApplicationContext xmlApplicationContext = new ClassPathXmlApplicationContext("");
+
+		//ClassPathXmlApplicationContext xmlApplicationContext = new ClassPathXmlApplicationContext("");
 		ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
 
 		//UserService service = (UserService) applicationContext.getBean("&login");
-		UserService service = (UserService) applicationContext.getBean("login");
+		LoginService service = (LoginService) applicationContext.getBean("login");
 		service.login("zsj");
 	}
+
+
 }

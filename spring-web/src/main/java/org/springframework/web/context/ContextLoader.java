@@ -132,7 +132,11 @@ public class ContextLoader {
 	 */
 	private static final String DEFAULT_STRATEGIES_PATH = "ContextLoader.properties";
 
-
+	/**
+	 * 默认的配置 Properties 对象
+	 *
+	 * 从 {@link #DEFAULT_STRATEGIES_PATH} 中读取
+	 */
 	private static final Properties defaultStrategies;
 
 	static {
@@ -259,12 +263,15 @@ public class ContextLoader {
 	 * @see #CONFIG_LOCATION_PARAM
 	 */
 	public WebApplicationContext initWebApplicationContext(ServletContext servletContext) {
+		// <1> 若已经存在 ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE 对应的 WebApplicationContext 对象，则抛出 IllegalStateException 异常。
+		// 例如，在 web.xml 中存在多个 ContextLoader 。
 		if (servletContext.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE) != null) {
 			throw new IllegalStateException(
 					"Cannot initialize context because there is already a root application context present - " +
 					"check whether you have multiple ContextLoader* definitions in your web.xml!");
 		}
 
+		// <2> 打印日志
 		servletContext.log("Initializing Spring root WebApplicationContext");
 		Log logger = LogFactory.getLog(ContextLoader.class);
 		if (logger.isInfoEnabled()) {
@@ -276,6 +283,7 @@ public class ContextLoader {
 			// Store context in local instance variable, to guarantee that
 			// it is available on ServletContext shutdown.
 			if (this.context == null) {
+				// <3> 初始化 context ，即创建 context 对象
 				this.context = createWebApplicationContext(servletContext);
 			}
 			if (this.context instanceof ConfigurableWebApplicationContext) {
@@ -329,11 +337,14 @@ public class ContextLoader {
 	 * @see ConfigurableWebApplicationContext
 	 */
 	protected WebApplicationContext createWebApplicationContext(ServletContext sc) {
+		// <1> 获得 context 的类
 		Class<?> contextClass = determineContextClass(sc);
+		// <2> 判断 context 的类，是否符合 ConfigurableWebApplicationContext 的类型
 		if (!ConfigurableWebApplicationContext.class.isAssignableFrom(contextClass)) {
 			throw new ApplicationContextException("Custom context class [" + contextClass.getName() +
 					"] is not of type [" + ConfigurableWebApplicationContext.class.getName() + "]");
 		}
+		// <3> 创建 context 的类的对象
 		return (ConfigurableWebApplicationContext) BeanUtils.instantiateClass(contextClass);
 	}
 

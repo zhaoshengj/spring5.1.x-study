@@ -70,20 +70,17 @@ import org.springframework.util.StringUtils;
  */
 public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements SingletonBeanRegistry {
 
-	/** Cache of singleton objects: bean name to bean instance. */
-	/**
+	/** Cache of singleton objects: bean name to bean instance.
 	 * 存放所有完全初始化好的单例bean，获取的bean可以直接使用
 	 */
 	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
 
-	/** Cache of singleton factories: bean name to ObjectFactory. */
-	/**
+	/** Cache of singleton factories: bean name to ObjectFactory.
 	 *  存放 bean工厂解决循环依赖
 	 */
 	private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
 
-	/** Cache of early singleton objects: bean name to bean instance. */
-	/**
+	/** Cache of early singleton objects: bean name to bean instance.
 	 * 存放原始的bean对象用于解决循环依赖，存放的bean对象没有被填充属性
 	 */
 	private final Map<String, Object> earlySingletonObjects = new HashMap<>(16);
@@ -138,12 +135,18 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 * <p>To be called for eager registration of singletons.
 	 * @param beanName the name of the bean
 	 * @param singletonObject the singleton object
+	 *
+	 *  对象加入一级缓存池singletonObjects中    并且移除二三级缓存池中的对象
 	 */
 	protected void addSingleton(String beanName, Object singletonObject) {
 		synchronized (this.singletonObjects) {
+			//加入单例池中
 			this.singletonObjects.put(beanName, singletonObject);
+			//移除三级缓存池
 			this.singletonFactories.remove(beanName);
+			//移除二级缓存（循环依赖的情况下，对象存在与二级缓存池中）
 			this.earlySingletonObjects.remove(beanName);
+			//记录已保存的bean 对象
 			this.registeredSingletons.add(beanName);
 		}
 	}
@@ -236,6 +239,8 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
 		Assert.notNull(beanName, "Bean name must not be null");
 		synchronized (this.singletonObjects) {
+
+			//尝试从单例池中获取对象
 			Object singletonObject = this.singletonObjects.get(beanName);
 			if (singletonObject == null) {
 				if (this.singletonsCurrentlyInDestruction) {
@@ -246,6 +251,10 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				if (logger.isDebugEnabled()) {
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
+				/**
+				 * 标志当前的bean马上要被加载
+				 * Set集合  singletonsCurrentlyInCreation
+				 */
 				beforeSingletonCreation(beanName);
 				boolean newSingleton = false;
 				boolean recordSuppressedExceptions = (this.suppressedExceptions == null);
@@ -253,6 +262,8 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					this.suppressedExceptions = new LinkedHashSet<>();
 				}
 				try {
+					//初始化 bean
+					//调用  createBean 方法
 					singletonObject = singletonFactory.getObject();
 					newSingleton = true;
 				}
@@ -279,6 +290,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					afterSingletonCreation(beanName);
 				}
 				if (newSingleton) {
+					//加入单例缓存池中
 					addSingleton(beanName, singletonObject);
 				}
 			}

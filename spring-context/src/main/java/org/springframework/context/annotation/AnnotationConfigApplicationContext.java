@@ -88,11 +88,13 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * {@link Configuration @Configuration} classes
 	 */
 	public AnnotationConfigApplicationContext(Class<?>... componentClasses) {
+		//调用构造函数 初始BeanFactory
 		this();
 
-
+		//注册配置类
 		register(componentClasses);
 
+		//IoC容器刷新接口
 		refresh();
 	}
 

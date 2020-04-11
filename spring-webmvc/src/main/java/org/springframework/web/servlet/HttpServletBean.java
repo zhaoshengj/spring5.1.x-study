@@ -88,6 +88,11 @@ public abstract class HttpServletBean extends HttpServlet implements Environment
 	@Nullable
 	private ConfigurableEnvironment environment;
 
+	/**
+	 * 必须配置的属性的集合
+	 *
+	 * 在 {@link ServletConfigPropertyValues} 中，会校验是否有对应的属性
+	 */
 	private final Set<String> requiredProperties = new HashSet<>(4);
 
 
@@ -110,6 +115,8 @@ public abstract class HttpServletBean extends HttpServlet implements Environment
 	 * provided by default.
 	 * @throws IllegalArgumentException if environment is not assignable to
 	 * {@code ConfigurableEnvironment}
+	 *
+	 * // 实现自 EnvironmentAware 接口，自动注入
 	 */
 	@Override
 	public void setEnvironment(Environment environment) {
@@ -144,18 +151,25 @@ public abstract class HttpServletBean extends HttpServlet implements Environment
 	 * invoke subclass initialization.
 	 * @throws ServletException if bean properties are invalid (or required
 	 * properties are missing), or if subclass initialization fails.
+	 *
+	 * 负责将 ServletConfig 设置到当前 Servlet 对象中
 	 */
 	@Override
 	public final void init() throws ServletException {
 
 		// Set bean properties from init parameters.
+		// <1> 解析 <init-param /> 标签，封装到 PropertyValues pvs 中
 		PropertyValues pvs = new ServletConfigPropertyValues(getServletConfig(), this.requiredProperties);
 		if (!pvs.isEmpty()) {
 			try {
+				// <2.1> 将当前的这个 Servlet 对象，转化成一个 BeanWrapper 对象。从而能够以 Spring 的方式来将 pvs 注入到该 BeanWrapper 对象中
 				BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(this);
 				ResourceLoader resourceLoader = new ServletContextResourceLoader(getServletContext());
+				// <2.2> 注册自定义属性编辑器，一旦碰到 Resource 类型的属性，将会使用 ResourceEditor 进行解析
 				bw.registerCustomEditor(Resource.class, new ResourceEditor(resourceLoader, getEnvironment()));
+				// <2.3> 空实现，留给子类覆盖
 				initBeanWrapper(bw);
+				// <2.4> 以 Spring 的方式来将 pvs 注入到该 BeanWrapper 对象中
 				bw.setPropertyValues(pvs, true);
 			}
 			catch (BeansException ex) {
@@ -167,6 +181,7 @@ public abstract class HttpServletBean extends HttpServlet implements Environment
 		}
 
 		// Let subclasses do whatever initialization they like.
+		// <3> 子类来实现，实现自定义的初始化逻辑。目前，有具体的代码实现。
 		initServletBean();
 	}
 

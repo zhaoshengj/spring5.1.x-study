@@ -84,11 +84,18 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 		List<String> aspectNames = this.aspectBeanNames;
 
 		if (aspectNames == null) {
+			//dcl检查
 			synchronized (this) {
 				aspectNames = this.aspectBeanNames;
 				if (aspectNames == null) {
 					List<Advisor> advisors = new ArrayList<>();
 					aspectNames = new ArrayList<>();
+					/**
+					 *  AspectJ 解析完需要加入到缓存中 是应为传入对象为  Object.class,
+					 *  遍历的beanName 过多，消耗性能，方面后置处理器使用
+					 *
+					 *  事务  切面的时候不需要加入缓存是因为传入的  是Advisor.class
+					 */
 					String[] beanNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 							this.beanFactory, Object.class, true, false);
 					for (String beanName : beanNames) {
@@ -101,13 +108,20 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 						if (beanType == null) {
 							continue;
 						}
+						//如果 是切面类  @Aspect
 						if (this.advisorFactory.isAspect(beanType)) {
 							aspectNames.add(beanName);
+							//beanName class对象 构建 AspectMetadata
 							AspectMetadata amd = new AspectMetadata(beanType, beanName);
 							if (amd.getAjType().getPerClause().getKind() == PerClauseKind.SINGLETON) {
+
+								//切面注解的实例工厂
 								MetadataAwareAspectInstanceFactory factory =
 										new BeanFactoryAspectInstanceFactory(this.beanFactory, beanName);
+
+								//解析前置，后置等通知
 								List<Advisor> classAdvisors = this.advisorFactory.getAdvisors(factory);
+								//放入缓存
 								if (this.beanFactory.isSingleton(beanName)) {
 									this.advisorsCache.put(beanName, classAdvisors);
 								}
