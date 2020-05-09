@@ -1,5 +1,7 @@
 package com.zsj.mvc;
 
+import com.zsj.mvc.config.HelloServlet;
+import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.connector.Connector;
@@ -18,39 +20,30 @@ public class run {
 	@Test
 	public  void Test() throws LifecycleException {
 
-		String webappDirLocation = "src/main/webapp/WEB-INF";
-		String absolutePath = new File(
-				webappDirLocation).getAbsolutePath();
-		System.out.println(absolutePath);
-
-		Tomcat tomcat = new Tomcat();//创建tomcat实例，用来启动tomcat
+		// 创建tomcat应用对象
+		Tomcat tomcat = new Tomcat();
+		/**
+		 * 配置tomcat 访问端口，编码
+		 */
 		tomcat.setHostname("localhost");//设置主机名
 		//tomcat.setPort(8080);//设置端口
 		Connector connector = tomcat.getConnector();
+		connector.setURIEncoding("UTF-8");
 		connector.setPort(8080);
-		tomcat.setBaseDir(".");//tomcat存储自身信息的目录，比如日志等信息，根目录
 
-		StandardContext ctx = (StandardContext) tomcat.addWebapp("/", new File(
-				webappDirLocation).getAbsolutePath());
-
-		/*
-		 * true时：相关classes | jar 修改时，会重新加载资源，不过资源消耗很大
-		 * autoDeploy 与这个很相似，tomcat自带的热部署不是特别可靠，效率也不高。生产环境不建议开启。
-		 */
-		ctx.setReloadable(false);
-
-		// 上下文监听器
-		ctx.addLifecycleListener(new AprLifecycleListener());
-
-	/*	File additionWebInfClasses = new File("target/classes");
-		WebResourceRoot resources = new StandardRoot(ctx);
-		resources.addPreResources(new DirResourceSet(resources,
-				"/WEB-INF/classes", additionWebInfClasses.getAbsolutePath(),
-				"/"));*/
-		// 注册servlet
-		//tomcat.addServlet("/access", "demoServlet", new DemoServlet());
-		// servlet mapping
-		//ctx.addServletMappingDecoded("/demo.do", "demoServlet");
+        // 是否自动部署
+		tomcat.getHost().setAutoDeploy(false);
+		// 创建上下文
+		StandardContext standardContext = new StandardContext();
+		// 设置项目名
+		standardContext.setPath("/test");
+		// 监听上下文
+		standardContext.addLifecycleListener(new Tomcat.FixContextListener());
+		// 向tomcat容器对象添加上下文配置     tomcat.getHost().addChild(standardContext);
+		// 创建Servlet
+		tomcat.addServlet("/test", "helloword", new HelloServlet());
+		// Servlet映射
+		standardContext.addServletMappingDecoded("/hello", "helloword");
 
 		tomcat.start();//启动tomcat
 

@@ -31,4 +31,6 @@ rootProject.children.each {project ->
 }
 include 'zsj-study:zsj-mvc'
 findProject(':zsj-study:zsj-mvc')?.name = 'zsj-mvc'
+include 'zsj-study:zsj-aop-ioc'
+findProject(':zsj-study:zsj-aop-ioc')?.name = 'zsj-aop-ioc'
 

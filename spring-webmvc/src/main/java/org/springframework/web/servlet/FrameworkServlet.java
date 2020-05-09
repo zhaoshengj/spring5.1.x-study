@@ -870,6 +870,8 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 
 	/**
 	 * Override the parent class implementation in order to intercept PATCH requests.
+	 *
+	 * 重写父类实现以拦截PATCH请求。
 	 */
 	@Override
 	protected void service(HttpServletRequest request, HttpServletResponse response)
