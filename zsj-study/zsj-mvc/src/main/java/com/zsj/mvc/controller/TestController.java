@@ -19,4 +19,15 @@ public class TestController {
 		System.out.println(bean.toString());
 		return mav.toString();
 	}
+
+	@RequestMapping("/hello")
+	@ResponseBody
+	public String hello() {
+		ModelAndView mav = new ModelAndView();
+		MyBean bean = new MyBean();
+		mav.addObject("myBean", bean);
+		mav.setViewName("Hello");
+		System.out.println(bean.toString());
+		return mav.toString();
+	}
 }

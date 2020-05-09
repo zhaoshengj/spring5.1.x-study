@@ -35,6 +35,8 @@ dependencies {
         optional group: 'commons-dbcp', name: 'commons-dbcp', version: '1.4'
         optional group: 'mysql', name: 'mysql-connector-java', version: '5.1.38'
 
+        optional("org.apache.tomcat.embed:tomcat-embed-jasper:9.0.30")
+        optional("org.apache.tomcat.embed:tomcat-embed-core:9.0.30")
         optional("javax.annotation:javax.annotation-api:1.3.2")
         optional("javax.ejb:javax.ejb-api:3.2")
         optional("javax.enterprise.concurrent:javax.enterprise.concurrent-api:1.0")
