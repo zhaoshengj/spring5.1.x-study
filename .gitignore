@@ -22,7 +22,6 @@ classes/
 buildSrc/build
 /spring-*/build
 /src/asciidoc/build
-target/
 
 # Projects not in this branch
 integration-tests/
